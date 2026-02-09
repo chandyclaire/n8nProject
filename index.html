@@ -3,24 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Email Form</title>
+    <style>
+        /* A little styling to keep the status area clean */
+        #status-area {
+            margin-top: 20px;
+            padding: 15px;
+            border-top: 1px solid #ccc;
+            display: none; /* Hidden until a message is sent */
+        }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
 </head>
 <body>
-    <form method="post" action="https://chandyclaire.app.n8n.cloud/webhook/webhook">
-        <label>
-            Gmail:
-        </label>
-        <input type="gmail" name="to"/>
-        <label>
-            Subject:
-        </label>
-        <input type="text" name="subject"/>
-        <label>
-            Message:
-        </label>
-        <input type="text" name="message"/>
-        <button type="submit" name="submit">Send</button>
-
+    <form id="emailForm" method="post" action="https://chandyclaire.app.n8n.cloud/webhook/webhook">
+        <label>Gmail:</label>
+        <input type="email" name="to" required/>
+        
+        <label>Subject:</label>
+        <input type="text" name="subject" required/>
+        
+        <label>Message:</label>
+        <input type="text" name="message" required/>
+        
+        <button type="submit">Send</button>
     </form>
+
+    <div id="status-area">
+        <h3>Submission Details:</h3>
+        <p><strong>Status:</strong> <span id="status-text">Sending...</span></p>
+        <p><strong>Message Sent:</strong> <span id="display-message"></span></p>
+    </div>
+
+    <script>
+        const form = document.getElementById('emailForm');
+        const statusArea = document.getElementById('status-area');
+        const statusText = document.getElementById('status-text');
+        const displayMsg = document.getElementById('display-message');
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevents the page from redirecting
+
+            // Show the status area and display the message immediately
+            statusArea.style.display = 'block';
+            const formData = new FormData(form);
+            displayMsg.innerText = formData.get('message');
+            statusText.innerText = "Processing...";
+            statusText.className = "";
+
+            // Send the data to your n8n webhook
+            fetch(form.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    statusText.innerText = "Success! Message received by webhook.";
+                    statusText.className = "success";
+                } else {
+                    statusText.innerText = "Error: Server returned " + response.status;
+                    statusText.className = "error";
+                }
+            })
+            .catch(error => {
+                statusText.innerText = "Connection failed.";
+                statusText.className = "error";
+            });
+        });
+    </script>
 </body>
 </html>
